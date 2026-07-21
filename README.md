@@ -1,4 +1,6 @@
--- ESP Otimizado + Highlight + Nome do Time
+-- ESP Otimizado + Highlight + Nome do Time + Itens
+-- Pressione K para ligar/desligar
+
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
@@ -24,12 +26,10 @@ local function NewESP(plr)
     if plr == LocalPlayer then return end
     
     local highlight = Instance.new("Highlight")
-    highlight.FillTransparency = 0.7
-    highlight.OutlineTransparency = 0.3
-    highlight.OutlineColor = Color3.fromRGB(255,255,255)
+    highlight.FillTransparency = 0.65
+    highlight.OutlineTransparency = 0.25
     highlight.Enabled = false
-    highlight.Adornee = nil
-    highlight.Parent = plr.Character or plr.CharacterAdded:Wait()
+    highlight.Parent = workspace
     
     local esp = {
         Box = CreateDrawing("Square"),
@@ -44,7 +44,6 @@ local function NewESP(plr)
         Connections = {}
     }
     
-    -- Configurações visuais
     esp.Box.Thickness = 2
     esp.Box.Filled = false
     esp.Box.Transparency = 0.85
@@ -52,9 +51,8 @@ local function NewESP(plr)
     esp.TeamName.Size = 14
     esp.TeamName.Center = true
     esp.TeamName.Outline = true
-    esp.TeamName.Color = Color3.fromRGB(200, 200, 255)
+    esp.TeamName.Color = Color3.fromRGB(180, 220, 255)
     
-    -- Health Bar, Tracer, etc. (mesmo de antes)
     esp.HealthBarBG.Color = Color3.fromRGB(30,30,30)
     esp.HealthBarBG.Filled = true
     esp.HealthBar.Filled = true
@@ -68,7 +66,6 @@ local function NewESP(plr)
         t.Outline = true
     end
     
-    -- 3 Slots de itens (mantido)
     for i = 1, 3 do
         local slot = { BG = CreateDrawing("Square"), Image = CreateDrawing("Image") }
         slot.BG.Size = Vector2.new(28, 28)
@@ -109,38 +106,31 @@ local function NewESP(plr)
         local teamColor = (ESP.TeamCheck and plr.Team and plr.Team.TeamColor.Color) or Color3.fromRGB(255, 60, 60)
         local teamName = plr.Team and plr.Team.Name or "Sem Time"
         
-        -- Highlight no corpo inteiro
-        if ESP.HighlightEnabled then
+        if ESP.HighlightEnabled and char then
             esp.Highlight.Adornee = char
             esp.Highlight.FillColor = teamColor
             esp.Highlight.OutlineColor = teamColor
             esp.Highlight.Enabled = true
-        else
-            esp.Highlight.Enabled = false
         end
         
-        -- Box
         local height = (Camera:WorldToViewportPoint(root.Position + Vector3.new(0,3,0)).Y - Camera:WorldToViewportPoint(root.Position - Vector3.new(0,3.5,0)).Y) * 1.6
+        
         esp.Box.Size = Vector2.new(height * 1.8, height * 2.5)
         esp.Box.Position = Vector2.new(screenPos.X - esp.Box.Size.X/2, screenPos.Y - esp.Box.Size.Y/2)
         esp.Box.Color = teamColor
         esp.Box.Visible = true
         
-        -- Name
         esp.Name.Text = plr.DisplayName
         esp.Name.Position = Vector2.new(screenPos.X, screenPos.Y - esp.Box.Size.Y/2 - 22)
         esp.Name.Color = teamColor
         esp.Name.Visible = true
         
-        -- Team Name
         esp.TeamName.Text = "[" .. teamName .. "]"
         esp.TeamName.Position = Vector2.new(screenPos.X, screenPos.Y - esp.Box.Size.Y/2 - 38)
         esp.TeamName.Visible = true
         
-        -- Health Bar, Tracer, Distance, Itens... (mantidos iguais)
         local hpRatio = humanoid.Health / humanoid.MaxHealth
         local barW = esp.Box.Size.X * 0.9
-        
         esp.HealthBarBG.Size = Vector2.new(barW, 6)
         esp.HealthBarBG.Position = Vector2.new(screenPos.X - barW/2, screenPos.Y - esp.Box.Size.Y/2 - 8)
         esp.HealthBarBG.Visible = true
@@ -159,7 +149,6 @@ local function NewESP(plr)
         esp.Distance.Position = Vector2.new(screenPos.X, screenPos.Y + esp.Box.Size.Y/2 + 10)
         esp.Distance.Visible = true
         
-        -- Slots de itens (mesma lógica anterior)
         local tools = {}
         local equipped = char:FindFirstChildOfClass("Tool")
         if equipped then table.insert(tools, equipped) end
@@ -173,10 +162,10 @@ local function NewESP(plr)
             if tool then
                 slot.BG.Visible = true
                 slot.Image.Visible = true
-                local isEquipped = equipped == tool
+                local isEquipped = (equipped == tool)
                 slot.BG.Transparency = isEquipped and 0.25 or 0.8
                 slot.BG.Color = isEquipped and Color3.fromRGB(0, 200, 255) or Color3.fromRGB(30,30,30)
-                slot.Image.Data = "rbxassetid://3926305904" -- fallback (pode melhorar depois)
+                slot.Image.Data = "rbxassetid://3926305904"
                 slot.Image.Position = slot.BG.Position + Vector2.new(2,2)
             else
                 slot.BG.Visible = false
@@ -194,16 +183,14 @@ local function NewESP(plr)
     PlayerESP[plr] = esp
 end
 
--- Inicialização
 for _, plr in ipairs(Players:GetPlayers()) do NewESP(plr) end
 Players.PlayerAdded:Connect(NewESP)
 
--- Toggle
+-- Toggle com tecla K
 UserInputService.InputBegan:Connect(function(i, gp)
-    if gp or i.KeyCode \~= Enum.KeyCode.Insert then return end
+    if gp or i.KeyCode \~= Enum.KeyCode.K then return end
     ESP.Enabled = not ESP.Enabled
     print("ESP:", ESP.Enabled and "✅ ATIVADO" or "❌ DESATIVADO")
 end)
 
-print("🚀 ESP com Highlight + Nome do Time carregado!")
-print("INSERT = Ligar/Desligar")
+print("🚀 ESP carregado! Pressione K para ligar/desligar")
