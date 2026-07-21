@@ -1,21 +1,107 @@
--- ESP Otimizado + Highlight + Nome do Time + Itens
--- Pressione K para ligar/desligar
+-- ESP com GUI Arrastável para Mobile
 
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
 local UserInputService = game:GetService("UserInputService")
+local TweenService = game:GetService("TweenService")
 local Camera = workspace.CurrentCamera
 local LocalPlayer = Players.LocalPlayer
 
 local ESP = { 
-    Enabled = true, 
+    Enabled = false, 
     MaxDistance = 7500, 
     TeamCheck = true,
     HighlightEnabled = true 
 }
 
 local PlayerESP = {}
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.ResetOnSpawn = false
+ScreenGui.Parent = LocalPlayer:WaitForChild("PlayerGui")
 
+-- Criar Frame da GUI
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 180, 0, 100)
+MainFrame.Position = UDim2.new(0.5, -90, 0.1, 0)
+MainFrame.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+MainFrame.BorderSizePixel = 0
+MainFrame.BackgroundTransparency = 0.3
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 12)
+UICorner.Parent = MainFrame
+
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 30)
+Title.BackgroundTransparency = 1
+Title.Text = "ESP Menu"
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextSize = 16
+Title.Font = Enum.Font.GothamBold
+Title.Parent = MainFrame
+
+local ToggleButton = Instance.new("TextButton")
+ToggleButton.Size = UDim2.new(0.9, 0, 0, 50)
+ToggleButton.Position = UDim2.new(0.05, 0, 0.4, 0)
+ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+ToggleButton.Text = "ESP: DESLIGADO"
+ToggleButton.TextColor3 = Color3.fromRGB(255, 255, 255)
+ToggleButton.TextSize = 16
+ToggleButton.Font = Enum.Font.GothamBold
+ToggleButton.Parent = MainFrame
+
+local ButtonCorner = Instance.new("UICorner")
+ButtonCorner.CornerRadius = UDim.new(0, 10)
+ButtonCorner.Parent = ToggleButton
+
+-- Função para tornar arrastável
+local dragging = false
+local dragInput
+local dragStart
+local startPos
+
+local function updateInput(input)
+    local delta = input.Position - dragStart
+    local tweenInfo = TweenInfo.new(0.1)
+    TweenService:Create(MainFrame, tweenInfo, {Position = UDim2.new(startPos.X.Scale, startPos.X.Offset + delta.X, startPos.Y.Scale, startPos.Y.Offset + delta.Y)}):Play()
+end
+
+MainFrame.InputBegan:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = true
+        dragStart = input.Position
+        startPos = MainFrame.Position
+    end
+end)
+
+MainFrame.InputEnded:Connect(function(input)
+    if input.UserInputType == Enum.UserInputType.MouseButton1 or input.UserInputType == Enum.UserInputType.Touch then
+        dragging = false
+    end
+end)
+
+UserInputService.InputChanged:Connect(function(input)
+    if dragging and (input.UserInputType == Enum.UserInputType.MouseMovement or input.UserInputType == Enum.UserInputType.Touch) then
+        updateInput(input)
+    end
+end)
+
+-- Toggle do ESP
+local function toggleESP()
+    ESP.Enabled = not ESP.Enabled
+    if ESP.Enabled then
+        ToggleButton.Text = "ESP: LIGADO"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 255, 100)
+    else
+        ToggleButton.Text = "ESP: DESLIGADO"
+        ToggleButton.BackgroundColor3 = Color3.fromRGB(0, 170, 255)
+    end
+end
+
+ToggleButton.MouseButton1Click:Connect(toggleESP)
+
+-- Resto do código ESP (mesmo de antes, sem toggle de tecla)
 local function CreateDrawing(class)
     local d = Drawing.new(class)
     d.Visible = false
@@ -24,7 +110,7 @@ end
 
 local function NewESP(plr)
     if plr == LocalPlayer then return end
-    
+    -- (código do ESP completo igual ao anterior)
     local highlight = Instance.new("Highlight")
     highlight.FillTransparency = 0.65
     highlight.OutlineTransparency = 0.25
@@ -44,6 +130,7 @@ local function NewESP(plr)
         Connections = {}
     }
     
+    -- ... (o resto do código NewESP e Update é igual ao anterior)
     esp.Box.Thickness = 2
     esp.Box.Filled = false
     esp.Box.Transparency = 0.85
@@ -186,11 +273,4 @@ end
 for _, plr in ipairs(Players:GetPlayers()) do NewESP(plr) end
 Players.PlayerAdded:Connect(NewESP)
 
--- Toggle com tecla K
-UserInputService.InputBegan:Connect(function(i, gp)
-    if gp or i.KeyCode \~= Enum.KeyCode.K then return end
-    ESP.Enabled = not ESP.Enabled
-    print("ESP:", ESP.Enabled and "✅ ATIVADO" or "❌ DESATIVADO")
-end)
-
-print("🚀 ESP carregado! Pressione K para ligar/desligar")
+print("🚀 ESP com GUI Mobile carregado! Toque no botão para ligar/desligar.")
